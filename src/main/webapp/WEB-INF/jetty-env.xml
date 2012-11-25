@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
+
+<Configure id="ProjectForge" class="org.eclipse.jetty.webapp.WebAppContext">
+  <New id="ProjectForgeDS" class="org.eclipse.jetty.plus.jndi.Resource">
+    <Arg>
+      <Ref id="ProjectForge" />
+    </Arg>
+    <Arg>jdbc/ProjectForgeDS</Arg>
+    <Arg>
+      <New class="org.apache.commons.dbcp.BasicDataSource">
+        <Set name="driverClassName">
+          <SystemProperty name="jettyEnv.driverClassName" />
+        </Set>
+        <Set name="url">
+          <SystemProperty name="jettyEnv.jdbcUrl" />
+        </Set>
+        <Set name="username">
+          <SystemProperty name="jettyEnv.jdbcUser" />
+        </Set>
+        <Set name="password">
+          <SystemProperty name="jettyEnv.jdbcPassword" />
+        </Set>
+        <Set name="maxActive">
+          <SystemProperty name="jettyEnv.jdbcMaxActive" />
+        </Set>
+      </New>
+    </Arg>
+  </New>
+</Configure>
