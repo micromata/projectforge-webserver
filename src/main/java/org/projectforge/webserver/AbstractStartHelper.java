@@ -126,8 +126,14 @@ public abstract class AbstractStartHelper
       final InputStream is = classLoader.getResourceAsStream("jetty.xml");
       final XmlConfiguration configuration = new XmlConfiguration(is);
       configuration.configure(server);
-      System.out.println(">>> STARTING EMBEDDED JETTY SERVER, PRESS ANY KEY TO STOP");
       server.start();
+      System.err.println(">>>");
+      System.err.println(">>> ----------------------------------------------------------");
+      System.err.println(">>> |                                                        |");
+      System.err.println(">>> | PROJECTFORGE SERVER STARTED, PRESS ANY KEY TO SHUTDOWN |");
+      System.err.println(">>> |                                                        |");
+      System.err.println(">>> ----------------------------------------------------------");
+      System.err.println(">>>");
       if (startSettings.isLaunchBrowserAfterStartup() == true) {
         launchBrowser(connector, webAppContext);
       }
