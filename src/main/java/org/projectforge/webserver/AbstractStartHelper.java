@@ -45,6 +45,8 @@ public abstract class AbstractStartHelper
   private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(AbstractStartHelper.class);
 
   public static final int MILLIS_HOUR = 60 * 60 * 1000;
+  
+  private static final int JDBC_MAX_ACTIVE_DEFAULT = 200;
 
   protected StartSettings startSettings;
 
@@ -64,7 +66,7 @@ public abstract class AbstractStartHelper
       setProperty("hibernate.schemaUpdate", startSettings.isSchemaUpdate());
       setProperty("jettyEnv.jdbcUser", startSettings.getJdbcUser());
       setProperty("jettyEnv.jdbcPassword", startSettings.getJdbcPassword(), false);
-      setProperty("jettyEnv.jdbcMaxActive", startSettings.getJdbcMaxActive() != null ? startSettings.getJdbcMaxActive() : 200);
+      setProperty("jettyEnv.jdbcMaxActive", startSettings.getJdbcMaxActive() != null ? startSettings.getJdbcMaxActive() : JDBC_MAX_ACTIVE_DEFAULT);
     }
     setProperty("jetty.home", startSettings.getBaseDir());
 
