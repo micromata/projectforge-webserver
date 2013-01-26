@@ -1,8 +1,8 @@
 <projectDescription>
-  <name>ProjectForge-webserver</name>
+  <name>projectforge-webserver</name>
   <comment>ProjectForge is a multi user web application for collaborative team work. Organize time sheets, tasks, addresses, books etc. with project teams.</comment>
   <projects>
-    <project>ProjectForge-common</project>
+    <project>projectforge-common</project>
   </projects>
   <buildSpec>
     <buildCommand>
