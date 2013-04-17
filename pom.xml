@@ -23,7 +23,7 @@
   </build>
   <repositories>
     <repository>
-      <id>org.projectforge</id>
+      <id>org.projectforge.repo</id>
       <name>ProjectForge</name>
       <url>http://www.projectforge.org/nexus/content/repositories/ProjectForge-Snapshots</url> <!-- automatically set -->
     </repository>
