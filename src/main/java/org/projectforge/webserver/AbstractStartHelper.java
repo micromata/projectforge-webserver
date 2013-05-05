@@ -45,17 +45,31 @@ public abstract class AbstractStartHelper
   private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(AbstractStartHelper.class);
 
   public static final int MILLIS_HOUR = 60 * 60 * 1000;
-  
-  private static final int JDBC_MAX_ACTIVE_DEFAULT = 200;
 
   protected StartSettings startSettings;
+
+  private Server server;
+
+  public AbstractStartHelper()
+  {
+  }
 
   public AbstractStartHelper(StartSettings startSettings)
   {
     this.startSettings = startSettings;
   }
+  
+  public void setStartSettings(StartSettings startSettings)
+  {
+    this.startSettings = startSettings;
+  }
 
   public void start()
+  {
+    start(true);
+  }
+
+  public void start(boolean waitForKeyPress)
   {
     final int timeout = MILLIS_HOUR;
     setProperty("base.dir", startSettings.getBaseDir());
@@ -66,11 +80,11 @@ public abstract class AbstractStartHelper
       setProperty("hibernate.schemaUpdate", startSettings.isSchemaUpdate());
       setProperty("jettyEnv.jdbcUser", startSettings.getJdbcUser());
       setProperty("jettyEnv.jdbcPassword", startSettings.getJdbcPassword(), false);
-      setProperty("jettyEnv.jdbcMaxActive", startSettings.getJdbcMaxActive() != null ? startSettings.getJdbcMaxActive() : JDBC_MAX_ACTIVE_DEFAULT);
+      setProperty("jettyEnv.jdbcMaxActive", startSettings.getJdbcMaxActive());
     }
     setProperty("jetty.home", startSettings.getBaseDir());
 
-    final Server server = new Server();
+    server = new Server();
     final SocketConnector connector = new SocketConnector();
 
     // Set some timeout options to make debugging easier.
@@ -129,24 +143,30 @@ public abstract class AbstractStartHelper
       final XmlConfiguration configuration = new XmlConfiguration(is);
       configuration.configure(server);
       server.start();
-      System.err.println(">>>");
-      System.err.println(">>> ----------------------------------------------------------");
-      System.err.println(">>> |                                                        |");
-      System.err.println(">>> | PROJECTFORGE SERVER STARTED, PRESS ANY KEY TO SHUTDOWN |");
-      System.err.println(">>> |                                                        |");
-      System.err.println(">>> ----------------------------------------------------------");
-      System.err.println(">>>");
       if (startSettings.isLaunchBrowserAfterStartup() == true) {
         launchBrowser(connector, webAppContext);
       }
-      System.in.read();
-      System.out.println(">>> STOPPING EMBEDDED JETTY SERVER");
-      server.stop();
-      server.join();
-    } catch (final Exception e) {
-      e.printStackTrace();
-      System.exit(1);
+      if (waitForKeyPress == true) {
+        System.err.println(">>>");
+        System.err.println(">>> ----------------------------------------------------------");
+        System.err.println(">>> |                                                        |");
+        System.err.println(">>> | PROJECTFORGE SERVER STARTED, PRESS ANY KEY TO SHUTDOWN |");
+        System.err.println(">>> |                                                        |");
+        System.err.println(">>> ----------------------------------------------------------");
+        System.err.println(">>>");
+        System.in.read();
+        System.out.println(">>> STOPPING EMBEDDED JETTY SERVER");
+        server.stop();
+        server.join();
+      }
+    } catch (final Exception ex) {
+      log.error(ex.getMessage(), ex);
     }
+  }
+
+  public Server getServer()
+  {
+    return server;
   }
 
   protected abstract WebAppContext getWebAppContext();
