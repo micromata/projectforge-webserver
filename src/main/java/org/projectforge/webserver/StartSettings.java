@@ -35,13 +35,15 @@ import org.projectforge.common.DatabaseDialect;
  */
 public class StartSettings
 {
-  private int port = 8080;
+  private int port = getDefaultPort();
 
   private String baseDir;
 
   private boolean development = true;
 
   private boolean schemaUpdate = true;
+
+  private boolean https = false;
 
   private String jdbcUrl;
 
@@ -51,13 +53,15 @@ public class StartSettings
 
   private String jdbcPassword = "";
 
+  private String jdbcJarFile;
+
   private String dialect;
 
   private boolean stripWicketTags = true;
 
   private boolean usingCookies = true;
 
-  private Integer jdbcMaxActive;
+  private int jdbcMaxActive = getJdbcDefaultMaxActive();
 
   private boolean launchBrowserAfterStartup = true;
 
@@ -65,9 +69,76 @@ public class StartSettings
 
   private static final String DEFAULT_JDBC_URL_POSTGRESQL = "jdbc:postgresql://localhost:5432/projectforge";
 
+  /**
+   * @return 8080
+   */
+  public static int getDefaultPort()
+  {
+    return 8080;
+  }
+
+  /**
+   * "jdbc:hsqldb:" + baseDir + File.separatorChar + DEFAULT_JDBC_URL_HSQL_DB.
+   * @param baseDir
+   * @return
+   */
+  public static String getJdbcDefaultUrl(String baseDir)
+  {
+    return "jdbc:hsqldb:" + baseDir + File.separatorChar + DEFAULT_JDBC_URL_HSQL_DB;
+
+  }
+
+  /**
+   * @return "sa"
+   */
+  public static String getJdbcDefaultUser()
+  {
+    return "sa";
+  }
+
+  /**
+   * @return "org.hsqldb.jdbcDriver"
+   */
+  public static String getJdbcDefaultDriverClass()
+  {
+    return "org.hsqldb.jdbcDriver";
+  }
+
+  /**
+   * @return "org.hsqldb.jdbcDriver"
+   */
+  public static String getJdbcDefaultHsqlDriverClass()
+  {
+    return "org.hsqldb.jdbcDriver";
+  }
+
+  /**
+   * @return "org.postgresql.Driver"
+   */
+  public static String getJdbcDefaultPostgresDriverClass()
+  {
+    return "org.postgresql.Driver";
+  }
+
+  /**
+   * @return 200
+   */
+  public static int getJdbcDefaultMaxActive()
+  {
+    return 200;
+  }
+
+  /**
+   * @return DatabaseDialect.HSQL
+   */
+  public static DatabaseDialect getHibernateDefaultDialect()
+  {
+    return DatabaseDialect.HSQL;
+  }
+
   public StartSettings(final String baseDir)
   {
-    this(null, baseDir);
+    this((DatabaseDialect) null, baseDir);
   }
 
   public StartSettings(final DatabaseDialect databaseDialect, final String baseDir)
@@ -77,16 +148,22 @@ public class StartSettings
     this.baseDir = baseDir;
     if (databaseDialect == null) {
       // No database.
-    } else if (databaseDialect == DatabaseDialect.PostgreSQL) {
-      dialect = "org.hibernate.dialect.PostgreSQLDialect";
-      jdbcDriverClass = "org.postgresql.Driver";
-      jdbcUrl = DEFAULT_JDBC_URL_POSTGRESQL;
     } else {
-      dialect = "org.hibernate.dialect.HSQLDialect";
-      jdbcDriverClass = "org.hsqldb.jdbcDriver";
-      jdbcUrl = "jdbc:hsqldb:" + new File(baseDir).getAbsolutePath() + File.separatorChar + DEFAULT_JDBC_URL_HSQL_DB;
-      jdbcUser = "sa";
+      dialect = databaseDialect.getAsString();
+      if (databaseDialect == DatabaseDialect.PostgreSQL) {
+        jdbcDriverClass = getJdbcDefaultPostgresDriverClass();
+        jdbcUrl = DEFAULT_JDBC_URL_POSTGRESQL;
+      } else {
+        jdbcDriverClass = getJdbcDefaultDriverClass();
+        jdbcUrl = getJdbcDefaultUrl(new File(baseDir).getAbsolutePath());
+        jdbcUser = getJdbcDefaultUser();
+      }
     }
+  }
+
+  public StartSettings(final String databaseDialect, final String baseDir)
+  {
+    this(DatabaseDialect.fromString(databaseDialect), baseDir);
   }
 
   /**
@@ -100,6 +177,12 @@ public class StartSettings
   public StartSettings setPort(final int port)
   {
     this.port = port;
+    return this;
+  }
+
+  public StartSettings setDefaultPort()
+  {
+    this.port = getDefaultPort();
     return this;
   }
 
@@ -146,6 +229,11 @@ public class StartSettings
     return dialect;
   }
 
+  public void setDialect(String dialect)
+  {
+    this.dialect = dialect;
+  }
+
   /**
    * If true, than any missing table or column in the data-base is created automatically on start-up by Hibernate. This feature should be
    * used only on first start of ProjectForge especially in productive environments this value should be always false.
@@ -159,6 +247,20 @@ public class StartSettings
   {
     this.schemaUpdate = schemaUpdate;
     return this;
+  }
+
+  public boolean isHttps()
+  {
+    return https;
+  }
+
+  /**
+   * Not yet supported.
+   * @param https
+   */
+  public void setHttps(boolean https)
+  {
+    this.https = https;
   }
 
   /**
@@ -222,6 +324,19 @@ public class StartSettings
   }
 
   /**
+   * Absolute path to jar file containing jdbc driver (if not the built-in HSQLDB driver is used).
+   */
+  public String getJdbcJarFile()
+  {
+    return jdbcJarFile;
+  }
+
+  public void setJdbcJarFile(final String jdbcJarFile)
+  {
+    this.jdbcJarFile = jdbcJarFile;
+  }
+
+  /**
    * This feature is useful for developing for testing the functionality of ProjectForge if cookies are disabled.
    * @return the usingCookies
    */
@@ -260,7 +375,7 @@ public class StartSettings
    * Max active data base connections to configure.
    * @return the jdbcMaxActive
    */
-  public Integer getJdbcMaxActive()
+  public int getJdbcMaxActive()
   {
     return jdbcMaxActive;
   }
@@ -269,7 +384,7 @@ public class StartSettings
    * @param jdbcMaxActive the jdbcMaxActive to set
    * @return this for chaining.
    */
-  public StartSettings setJdbcMaxActive(final Integer jdbcMaxActive)
+  public StartSettings setJdbcMaxActive(final int jdbcMaxActive)
   {
     this.jdbcMaxActive = jdbcMaxActive;
     return this;
@@ -293,5 +408,28 @@ public class StartSettings
   {
     this.launchBrowserAfterStartup = launchBrowserAfterStartup;
     return this;
+  }
+
+  public void resetDatabaseSettings()
+  {
+    resetHsqlDatabaseSettings();
+  }
+
+  public void resetHsqlDatabaseSettings()
+  {
+    this.dialect = DatabaseDialect.HSQL.getAsString();
+    this.jdbcDriverClass = getJdbcDefaultDriverClass();
+    this.jdbcUser = getJdbcDefaultUser();
+    this.jdbcPassword = "";
+    this.jdbcMaxActive = getJdbcDefaultMaxActive();
+    this.jdbcUrl = getJdbcDefaultUrl(baseDir);
+    this.jdbcJarFile = null;
+  }
+
+  public void resetPostgresDatabaseSettings()
+  {
+    this.dialect = DatabaseDialect.PostgreSQL.getAsString();
+    this.jdbcDriverClass = getJdbcDefaultPostgresDriverClass();
+    this.jdbcUrl = DEFAULT_JDBC_URL_POSTGRESQL;
   }
 }
