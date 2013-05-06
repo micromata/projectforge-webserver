@@ -23,6 +23,8 @@
 
 package org.projectforge.webserver;
 
+import java.io.File;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -34,7 +36,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.projectforge.common.DatabaseDialect;
-import org.projectforge.shared.storage.StorageConstants;
 
 /**
  * Use this starter for starting ProjectForge from command line.<br/>
@@ -45,8 +46,10 @@ public class CommandLineStart extends AbstractStartHelper
 {
   private static Options options = new Options();
 
+  private String warFile;
+
   static {
-    options.addOption(createOption('w', "war", "war", true, "war file, default is ProjectForge.war"));
+    options.addOption(createOption('w', "war", "war", false, "war file, default is ProjectForge.war"));
     options
         .addOption(createOption('v', "development-mode", "boolean", false, "If true, ProjectForge will be started in development mode."));
     options.addOption(createOption('h', "help", false, "Print this help."));
@@ -102,25 +105,51 @@ public class CommandLineStart extends AbstractStartHelper
     } catch (ParseException exp) {
       // oops, something went wrong
       System.err.println("Parsing failed.  Reason: " + exp.getMessage());
-      HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("projectforge-webserver", options, true);
+      printHelp();
       return;
     }
     String userDir = System.getProperty("user.dir");
     String baseDir = getString(cmdLine, 'l', userDir);
+    if (StringUtils.isEmpty(baseDir) == true) {
+      baseDir = ".";
+    }
     final StartSettings settings = new StartSettings(DatabaseDialect.HSQL, baseDir);
     settings.setJdbcDriverClass(getString(cmdLine, "jc", StartSettings.getJdbcDefaultDriverClass()));
     settings.setJdbcUrl(getString(cmdLine, "jdbc-url", StartSettings.getJdbcDefaultUrl(baseDir)));
-    settings.setJdbcDriverClass(getString(cmdLine, "ju", StartSettings.getJdbcDefaultUser()));
-    settings.setJdbcDriverClass(getString(cmdLine, "jp", null));
+    settings.setJdbcUser(getString(cmdLine, "ju", StartSettings.getJdbcDefaultUser()));
+    settings.setJdbcPassword(getString(cmdLine, "jp", null));
     settings.setSchemaUpdate(getBoolean(cmdLine, 'u', false));
     settings.setLaunchBrowserAfterStartup(getBoolean(cmdLine, 'b', true));
     settings.setDevelopment(getBoolean(cmdLine, 'v', false));
     settings.setPort(getInt(cmdLine, 'p', settings.getPort()));
     // Set the url of ProjectForge's storage web server:
     // System.setProperty(StorageConstants.SYSTEM_PROPERTY_URL, "http://localhost:8081/");
-    final CommandLineStart startHelper = new CommandLineStart(settings);
+
+    if (new File(baseDir).isDirectory() == false) {
+      System.err.println("'" + baseDir + "' isn't a directory. Please specify other location (-l).");
+      printHelp();
+      return;
+    }
+    System.out.println("Using location '" + new File(baseDir).getAbsolutePath() + "'.");
+    String warFile = getString(cmdLine, 'w', null);
+    if (warFile == null) {
+      warFile = new File(new File(baseDir, "webapps"), "ProjectForge.war").getAbsolutePath();
+    }
+    if (new File(warFile).exists() == false) {
+      System.err.println("War file '" + warFile + "' doesn't exist. Please specify other location (-l) or war file (-w).");
+      printHelp();
+      return;
+    }
+    System.out.println("Using war file '" + new File(warFile).getAbsolutePath() + "'.");
+
+    final CommandLineStart startHelper = new CommandLineStart(settings, warFile);
     startHelper.start();
+  }
+
+  private static void printHelp()
+  {
+    HelpFormatter formatter = new HelpFormatter();
+    formatter.printHelp("projectforge-webserver", options, true);
   }
 
   private static boolean getBoolean(CommandLine cmdLine, char option, boolean defaultValue)
@@ -162,9 +191,10 @@ public class CommandLineStart extends AbstractStartHelper
   /**
    * @param startSettings
    */
-  public CommandLineStart(final StartSettings startSettings)
+  public CommandLineStart(final StartSettings startSettings, String warFile)
   {
     super(startSettings);
+    this.warFile = warFile;
   }
 
   /**
@@ -174,10 +204,9 @@ public class CommandLineStart extends AbstractStartHelper
   protected WebAppContext getWebAppContext()
   {
     final WebAppContext webAppContext = new WebAppContext();
-    webAppContext.setClassLoader(this.getClass().getClassLoader());
     webAppContext.setConfigurationClasses(CONFIGURATION_CLASSES);
     webAppContext.setContextPath("/ProjectForge");
-    webAppContext.setWar("src/main/webapp");
+    webAppContext.setWar(warFile);
     // webAppContext.setDescriptor("src/main/webapp/WEB-INF/web.xml");
     // webAppContext.setExtraClasspath("target/classes");
     webAppContext.setInitParameter("development", String.valueOf(startSettings.isDevelopment()));
