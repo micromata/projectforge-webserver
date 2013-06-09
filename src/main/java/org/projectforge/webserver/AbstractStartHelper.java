@@ -54,12 +54,12 @@ public abstract class AbstractStartHelper
   {
   }
 
-  public AbstractStartHelper(StartSettings startSettings)
+  public AbstractStartHelper(final StartSettings startSettings)
   {
     this.startSettings = startSettings;
   }
-  
-  public void setStartSettings(StartSettings startSettings)
+
+  public void setStartSettings(final StartSettings startSettings)
   {
     this.startSettings = startSettings;
   }
@@ -69,7 +69,7 @@ public abstract class AbstractStartHelper
     start(true);
   }
 
-  public void start(boolean waitForKeyPress)
+  public void start(final boolean waitForKeyPress)
   {
     final int timeout = MILLIS_HOUR;
     setProperty("base.dir", startSettings.getBaseDir());
@@ -124,6 +124,7 @@ public abstract class AbstractStartHelper
     if (webAppContext.getClassLoader() == null) {
       webAppContext.setClassLoader(webAppContext.getClassLoader());
     }
+    webAppContext.setMaxFormContentSize(2000000); // Increase 10 times.
     webAppContext.setServer(server);
     if (startSettings.isUsingCookies() == false) {
       log.info("Using cookies is disabled.");
@@ -176,7 +177,7 @@ public abstract class AbstractStartHelper
     return "";
   }
 
-  private void launchBrowser(final SocketConnector connector, WebAppContext webAppContext)
+  private void launchBrowser(final SocketConnector connector, final WebAppContext webAppContext)
   {
     Desktop desktop = null;
     if (Desktop.isDesktopSupported()) {
@@ -230,13 +231,13 @@ public abstract class AbstractStartHelper
   }
 
   public static final String[] CONFIGURATION_CLASSES = { //
-  org.eclipse.jetty.webapp.WebInfConfiguration.class.getName(), //
-      org.eclipse.jetty.webapp.WebXmlConfiguration.class.getName(), //
-      org.eclipse.jetty.webapp.MetaInfConfiguration.class.getName(), //
-      org.eclipse.jetty.webapp.FragmentConfiguration.class.getName(), //
-      org.eclipse.jetty.plus.webapp.EnvConfiguration.class.getName(), //
-      org.eclipse.jetty.plus.webapp.PlusConfiguration.class.getName(), //
-      org.eclipse.jetty.annotations.AnnotationConfiguration.class.getName(), //
-      org.eclipse.jetty.webapp.JettyWebXmlConfiguration.class.getName(), //
-      org.eclipse.jetty.webapp.TagLibConfiguration.class.getName()};
+    org.eclipse.jetty.webapp.WebInfConfiguration.class.getName(), //
+    org.eclipse.jetty.webapp.WebXmlConfiguration.class.getName(), //
+    org.eclipse.jetty.webapp.MetaInfConfiguration.class.getName(), //
+    org.eclipse.jetty.webapp.FragmentConfiguration.class.getName(), //
+    org.eclipse.jetty.plus.webapp.EnvConfiguration.class.getName(), //
+    org.eclipse.jetty.plus.webapp.PlusConfiguration.class.getName(), //
+    org.eclipse.jetty.annotations.AnnotationConfiguration.class.getName(), //
+    org.eclipse.jetty.webapp.JettyWebXmlConfiguration.class.getName(), //
+    org.eclipse.jetty.webapp.TagLibConfiguration.class.getName()};
 }
