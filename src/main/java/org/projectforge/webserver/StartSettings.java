@@ -63,7 +63,7 @@ public class StartSettings
 
   private int jdbcMaxActive = getJdbcDefaultMaxActive();
 
-  private boolean launchBrowserAfterStartup = true;
+  private boolean launchBrowserAfterStartup = false;
 
   private static final String DEFAULT_JDBC_URL_HSQL_DB = "database/ProjectForgeDB";
 
@@ -82,7 +82,7 @@ public class StartSettings
    * @param baseDir
    * @return
    */
-  public static String getJdbcDefaultUrl(String baseDir)
+  public static String getJdbcDefaultUrl(final String baseDir)
   {
     return "jdbc:hsqldb:" + baseDir + File.separatorChar + DEFAULT_JDBC_URL_HSQL_DB;
 
@@ -229,7 +229,7 @@ public class StartSettings
     return dialect;
   }
 
-  public void setDialect(String dialect)
+  public void setDialect(final String dialect)
   {
     this.dialect = dialect;
   }
@@ -258,7 +258,7 @@ public class StartSettings
    * Not yet supported.
    * @param https
    */
-  public void setHttps(boolean https)
+  public void setHttps(final boolean https)
   {
     this.https = https;
   }
